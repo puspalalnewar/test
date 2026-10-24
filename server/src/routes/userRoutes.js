@@ -1,28 +1,44 @@
 const express = require("express");
 const userModel = require("../models/user");
+const connectDB = require("../db/db");
 
 const router = express.Router();
 
 router.post("/name", async (req, res) => {
-  const { name } = req.body;
   try {
-    const isUserAlreadyExist = await userModel.findOne({ name });
-    if (isUserAlreadyExist) {
-      return res.status(401).json({
+    await connectDB();
+
+    const { name } = req.body;
+
+    if (!name) {
+      return res.status(400).json({
         success: false,
-        msg: "User already exist",
+        msg: "Name is required",
       });
     }
-    const user = await userModel.create({
-      name: name,
-    });
-    await user.save();
+
+    const existingUser = await userModel.findOne({ name });
+
+    if (existingUser) {
+      return res.status(409).json({
+        success: false,
+        msg: "User already exists",
+      });
+    }
+
+    await userModel.create({ name });
+
     return res.status(201).json({
       success: true,
       msg: "User created",
     });
   } catch (error) {
-    console.log("I am error : ", error);
+    console.error("User route error:", error.message);
+
+    return res.status(500).json({
+      success: false,
+      msg: "Request failed",
+    });
   }
 });
 
