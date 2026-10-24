@@ -7,7 +7,7 @@ const router = express.Router();
 router.post("/name", async (req, res) => {
   try {
     
-
+    await connectDB();
     const { name } = req.body;
 
     if (!name) {
